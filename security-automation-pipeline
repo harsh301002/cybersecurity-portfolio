@@ -1,0 +1,216 @@
+# ⚙️ Security Automation Pipeline
+
+An end-to-end CI/CD security pipeline that automates log collection, alert generation, and configuration enforcement — reducing manual security operations overhead through infrastructure-as-code and event-driven automation.
+
+---
+
+## 📌 Overview
+
+Manual security operations don't scale. This project builds a fully automated pipeline that continuously collects logs, enforces hardened configurations across hosts, and triggers alerts on anomalous activity — all wired together through a CI/CD workflow with Jenkins, Ansible, and Python.
+
+**Think of it as a lightweight, self-hosted SecOps automation framework.**
+
+---
+
+## 🎯 Key Features
+
+- 📥 **Centralized log collection** — rsyslog aggregates logs from multiple Linux hosts
+- 🔔 **Automated alerting** — Python scripts parse logs and trigger alerts on defined patterns
+- 🔧 **Configuration enforcement** — Ansible playbooks ensure hosts stay hardened on every run
+- 🔄 **CI/CD integration** — Jenkins pipeline triggers security checks on code/config changes
+- 🐳 **Containerized** — Docker used to isolate and deploy pipeline components
+
+---
+
+## 🧱 Architecture
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                  Developer / Admin                        │
+│              Push config changes to Git                  │
+└─────────────────────────┬────────────────────────────────┘
+                          │  Webhook trigger
+                          ▼
+┌──────────────────────────────────────────────────────────┐
+│                Jenkins CI/CD Pipeline                    │
+│                                                          │
+│   Stage 1: Lint & validate Ansible playbooks            │
+│   Stage 2: Run Ansible hardening across target hosts    │
+│   Stage 3: Execute log collection health checks         │
+│   Stage 4: Run Python security scan scripts             │
+│   Stage 5: Generate pipeline report                     │
+└─────────────────────────┬────────────────────────────────┘
+                          │
+          ┌───────────────┼───────────────┐
+          ▼               ▼               ▼
+┌─────────────┐  ┌──────────────┐  ┌──────────────┐
+│   Ansible   │  │   rsyslog    │  │   Python     │
+│  Hardening  │  │  Log Agg.   │  │  Alert Eng.  │
+│  Playbooks  │  │  Pipeline   │  │  Scripts     │
+└─────────────┘  └──────────────┘  └──────────────┘
+```
+
+---
+
+## 🛠️ Tech Stack
+
+| Component           | Technology           |
+|--------------------|---------------------|
+| CI/CD              | Jenkins              |
+| Configuration Mgmt | Ansible              |
+| Log Aggregation    | rsyslog              |
+| Scripting          | Python, Bash         |
+| Containerization   | Docker               |
+| Version Control    | Git/GitHub           |
+| OS                 | Linux (Ubuntu)       |
+
+---
+
+## 📁 Repository Structure
+
+```
+security-automation-pipeline/
+│
+├── ansible/
+│   ├── playbooks/
+│   │   ├── harden_linux.yml       # CIS Benchmark hardening
+│   │   ├── configure_rsyslog.yml  # Log forwarding setup
+│   │   └── firewall_rules.yml     # UFW/iptables configuration
+│   └── inventory/
+│       └── hosts.ini
+│
+├── jenkins/
+│   └── Jenkinsfile                # Pipeline definition
+│
+├── scripts/
+│   ├── log_parser.py              # Log ingestion and parsing
+│   ├── alert_engine.py            # Pattern matching and alerting
+│   └── health_check.py           # Pipeline health verification
+│
+├── docker/
+│   ├── Dockerfile
+│   └── docker-compose.yml
+│
+├── logs/
+│   └── sample/                   # Sample log outputs
+│
+└── README.md
+```
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Linux host (Ubuntu 20.04+)
+- Jenkins installed and running
+- Ansible (`pip install ansible`)
+- Docker & Docker Compose
+- Python 3.10+
+
+### Setup
+
+**1. Clone the repository**
+```bash
+git clone https://github.com/harsh301002/security-automation-pipeline.git
+cd security-automation-pipeline
+```
+
+**2. Configure Ansible inventory**
+```ini
+# ansible/inventory/hosts.ini
+[linux_hosts]
+192.168.1.10 ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa
+192.168.1.11 ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa
+```
+
+**3. Run hardening playbook manually**
+```bash
+ansible-playbook -i ansible/inventory/hosts.ini ansible/playbooks/harden_linux.yml
+```
+
+**4. Set up Jenkins pipeline**
+- Create a new Pipeline job in Jenkins
+- Point it to this repo's `Jenkinsfile`
+- Configure GitHub webhook for auto-trigger on push
+
+---
+
+## 📋 Sample Ansible Playbook
+
+```yaml
+# harden_linux.yml
+---
+- name: Linux CIS Benchmark Hardening
+  hosts: linux_hosts
+  become: yes
+
+  tasks:
+    - name: Disable root SSH login
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        regexp: '^PermitRootLogin'
+        line: 'PermitRootLogin no'
+      notify: Restart SSH
+
+    - name: Set password minimum length
+      lineinfile:
+        path: /etc/security/pwquality.conf
+        regexp: '^minlen'
+        line: 'minlen = 14'
+
+    - name: Enable UFW firewall
+      ufw:
+        state: enabled
+        policy: deny
+
+    - name: Allow SSH through firewall
+      ufw:
+        rule: allow
+        port: '22'
+        proto: tcp
+```
+
+---
+
+## 🔔 Alert Engine (Sample)
+
+```python
+# alert_engine.py
+import re
+
+PATTERNS = {
+    "ssh_brute_force": r"Failed password.*from (\d+\.\d+\.\d+\.\d+)",
+    "sudo_escalation": r"sudo.*authentication failure",
+    "log_tampering":   r"rm.*auth\.log|truncate.*syslog",
+}
+
+def analyze_log(log_line):
+    for alert_name, pattern in PATTERNS.items():
+        if re.search(pattern, log_line, re.IGNORECASE):
+            return {"alert": alert_name, "line": log_line.strip()}
+    return None
+```
+
+---
+
+## 📸 Screenshots
+
+> Jenkins pipeline stages, Ansible run output, and alert triggers coming soon.
+> See `/screenshots/` directory.
+
+---
+
+## 🔗 Related Projects
+
+- [SOC Threat Detection Lab](../soc-threat-detection-lab) — SIEM-based threat detection
+- [AI Pentest Assistant](../ai-pentest-assistant) — AI-powered recon and triage
+- [Linux & Cloud Hardening](../linux-cloud-hardening) — CIS Benchmark hardening on AWS EC2
+
+---
+
+## 👤 Author
+
+**Harsh Patel**
+M.S. Cybersecurity — DePaul University
+[LinkedIn](https://linkedin.com/in/harsh-patel-21a14330a) · [GitHub](https://github.com/harsh301002) · [Portfolio](https://hp301002.wixsite.com/mysite)
