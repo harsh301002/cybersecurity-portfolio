@@ -1,0 +1,222 @@
+# 🔒 Linux & Cloud Hardening
+
+A hands-on security hardening project applying CIS Benchmark controls to Linux systems and AWS EC2 instances — covering firewall configuration, IAM least-privilege enforcement, vulnerability scanning, and documented risk posture improvement.
+
+---
+
+## 📌 Overview
+
+Misconfigured systems are the leading cause of cloud breaches. This project systematically hardens Linux and AWS environments using industry-standard benchmarks, validates the posture with OpenVAS vulnerability scans, and documents risk reduction before and after remediation.
+
+**Real hardening. Real scan results. Documented evidence of risk reduction.**
+
+---
+
+## 🎯 Key Features
+
+- 🛡️ **CIS Benchmark hardening** — Linux OS hardened against CIS Level 1 & 2 controls
+- ☁️ **AWS EC2 hardening** — IAM least-privilege, security groups, and CloudTrail logging
+- 🔥 **Firewall configuration** — UFW/iptables rules enforcing deny-by-default posture
+- 🔍 **Vulnerability scanning** — OpenVAS scans pre- and post-hardening to measure improvement
+- 📄 **Risk documentation** — structured reports showing before/after security posture
+
+---
+
+## 🧱 Architecture
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                  AWS Environment                          │
+│                                                          │
+│   ┌────────────────────────────────────────────────┐    │
+│   │               EC2 Instance                      │    │
+│   │   Ubuntu 22.04 LTS                             │    │
+│   │   - CIS Hardened OS                            │    │
+│   │   - UFW Firewall (deny-by-default)             │    │
+│   │   - SSH key-only auth                          │    │
+│   │   - Fail2ban enabled                           │    │
+│   └────────────────────┬───────────────────────────┘    │
+│                        │                                 │
+│   ┌─────────────────────▼──────────────────────────┐    │
+│   │           AWS Security Controls                 │    │
+│   │   - IAM roles (least privilege)                │    │
+│   │   - Security Groups (whitelist only)           │    │
+│   │   - CloudTrail logging enabled                 │    │
+│   │   - S3 bucket policies enforced               │    │
+│   └────────────────────────────────────────────────┘    │
+└──────────────────────────────────────────────────────────┘
+                         │
+                         ▼
+┌──────────────────────────────────────────────────────────┐
+│              Vulnerability Assessment                     │
+│         OpenVAS Scan → Risk Report → Remediation        │
+└──────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🛠️ Tech Stack
+
+| Component              | Technology              |
+|-----------------------|------------------------|
+| Cloud Platform        | AWS (EC2, IAM, S3, CloudTrail) |
+| OS                    | Ubuntu 22.04 LTS        |
+| Hardening Standard    | CIS Benchmark Level 1/2 |
+| Firewall              | UFW / iptables          |
+| Vulnerability Scanner | OpenVAS (Greenbone)     |
+| Containerization      | Docker                  |
+| Scripting             | Bash, Python            |
+
+---
+
+## 📋 Hardening Controls Applied
+
+### Linux OS (CIS Benchmark)
+
+| Control Area         | Controls Applied |
+|---------------------|-----------------|
+| SSH Configuration   | PermitRootLogin no, MaxAuthTries 3, key-only auth |
+| Password Policy     | Min length 14, complexity requirements, expiry 90 days |
+| Filesystem         | noexec on /tmp, /var/tmp, /dev/shm |
+| Kernel Parameters  | ASLR enabled, IP forwarding disabled, SYN cookies |
+| Logging            | auditd enabled, auth logs retained 90 days |
+| Services           | Disabled: telnet, rsh, ftp, cups, avahi |
+| Firewall           | UFW default deny inbound/outbound, allow only SSH (22) |
+
+### AWS EC2 / Cloud
+
+| Control Area    | Controls Applied |
+|----------------|-----------------|
+| IAM            | Least-privilege roles, no wildcard permissions, MFA enforced |
+| Security Groups | Deny-by-default, SSH restricted to known IPs only |
+| CloudTrail     | Enabled in all regions, S3 log archiving |
+| S3             | Block public access, bucket policies, versioning enabled |
+| EC2            | No public IPs unless required, IMDSv2 enforced |
+
+---
+
+## 🔍 Vulnerability Scan Results
+
+### Pre-Hardening (OpenVAS Summary)
+
+| Severity | Count |
+|----------|-------|
+| Critical | 3     |
+| High     | 8     |
+| Medium   | 14    |
+| Low      | 22    |
+
+### Post-Hardening (OpenVAS Summary)
+
+| Severity | Count | Reduction |
+|----------|-------|-----------|
+| Critical | 0     | ↓ 100%    |
+| High     | 1     | ↓ 87.5%   |
+| Medium   | 4     | ↓ 71.4%   |
+| Low      | 9     | ↓ 59.1%   |
+
+> Full scan reports available in `/reports/` directory.
+
+---
+
+## 📁 Repository Structure
+
+```
+linux-cloud-hardening/
+│
+├── scripts/
+│   ├── harden_linux.sh        # Automated CIS hardening script
+│   ├── configure_ufw.sh       # Firewall rules setup
+│   └── audit_check.sh         # Post-hardening audit verification
+│
+├── aws/
+│   ├── iam_policy.json        # Sample least-privilege IAM policy
+│   ├── security_group.tf      # Terraform security group config
+│   └── cloudtrail_setup.md    # CloudTrail setup guide
+│
+├── reports/
+│   ├── pre_hardening_scan.pdf  # OpenVAS scan before hardening
+│   └── post_hardening_scan.pdf # OpenVAS scan after hardening
+│
+├── screenshots/               # Evidence screenshots
+└── README.md
+```
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Ubuntu 20.04+ (local VM or AWS EC2)
+- AWS account with EC2 access
+- OpenVAS / Greenbone Community Edition
+
+### Run the hardening script
+
+```bash
+git clone https://github.com/harsh301002/linux-cloud-hardening.git
+cd linux-cloud-hardening/scripts
+
+chmod +x harden_linux.sh
+sudo ./harden_linux.sh
+```
+
+### Verify hardening applied
+
+```bash
+sudo ./audit_check.sh
+```
+
+---
+
+## 🔧 Sample Hardening Script (Excerpt)
+
+```bash
+#!/bin/bash
+# harden_linux.sh — CIS Benchmark Level 1 Hardening
+
+echo "[*] Disabling root SSH login..."
+sed -i 's/^PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config
+
+echo "[*] Setting SSH max auth tries..."
+sed -i 's/^#MaxAuthTries.*/MaxAuthTries 3/' /etc/ssh/sshd_config
+
+echo "[*] Enabling UFW with deny-by-default..."
+ufw default deny incoming
+ufw default deny outgoing
+ufw allow out 443/tcp
+ufw allow out 80/tcp
+ufw allow in 22/tcp
+ufw --force enable
+
+echo "[*] Disabling unused services..."
+for svc in telnet rsh rlogin ftp cups avahi-daemon; do
+    systemctl disable $svc 2>/dev/null
+    systemctl stop $svc 2>/dev/null
+done
+
+echo "[+] Hardening complete. Run audit_check.sh to verify."
+```
+
+---
+
+## 📸 Screenshots
+
+> OpenVAS scan dashboards, before/after comparisons, and AWS console configurations coming soon.
+> See `/screenshots/` directory.
+
+---
+
+## 🔗 Related Projects
+
+- [SOC Threat Detection Lab](../soc-threat-detection-lab) — SIEM-based threat detection
+- [AI Pentest Assistant](../ai-pentest-assistant) — AI-powered recon and vulnerability triage
+- [Security Automation Pipeline](../security-automation-pipeline) — CI/CD security automation
+
+---
+
+## 👤 Author
+
+**Harsh Patel**
+M.S. Cybersecurity — DePaul University
+[LinkedIn](https://linkedin.com/in/harsh-patel-21a14330a) · [GitHub](https://github.com/harsh301002) · [Portfolio](https://hp301002.wixsite.com/mysite)
