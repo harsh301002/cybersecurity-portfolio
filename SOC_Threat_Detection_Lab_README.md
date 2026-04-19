@@ -186,16 +186,16 @@ index=* | head 20
 
 ---
 
-## 📄 Sample Incident Report
+## 📄 Incident Report
 
 ```
 INCIDENT REPORT — IR-2024-007
-Date: [Date]
+Date: 25th January, 2026
 Analyst: Harsh Patel
 Severity: High
 
 Summary:
-  Multiple failed SSH login attempts detected from external IP 192.168.x.x
+  Multiple failed SSH login attempts detected from external IP 192.168.34.8
   targeting user accounts on host ubuntu-lab-01.
 
 MITRE ATT&CK Mapping:
